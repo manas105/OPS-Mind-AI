@@ -1,0 +1,13 @@
+{
+  "name": "opsmind-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "backend": "npm --prefix Backend run dev",
+    "backend:start": "npm --prefix Backend run start",
+    "frontend": "npm --prefix frontend run dev",
+    "frontend:start": "npm --prefix frontend run start",
+    "dev": "start cmd /k \"npm run backend\" && start cmd /k \"npm run frontend\"",
+    "start": "start cmd /k \"npm run backend:start\" && start cmd /k \"npm run frontend:start\""
+  }
+}
