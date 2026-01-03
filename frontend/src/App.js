@@ -11,34 +11,34 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const theme = createTheme({
   palette: {
-    mode: 'light',
+    mode: 'dark',
     primary: {
-      main: '#2563eb',
-      light: '#3b82f6',
-      dark: '#1d4ed8',
+      main: '#667eea',
+      light: '#8b5cf6',
+      dark: '#764ba2',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#7c3aed',
+      main: '#764ba2',
       light: '#8b5cf6',
-      dark: '#6d28d9',
+      dark: '#667eea',
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f8fafc',
-      paper: '#ffffff',
+      default: '#000000',
+      paper: 'rgba(255, 255, 255, 0.1)',
     },
     grey: {
-      50: '#f8fafc',
-      100: '#f1f5f9',
-      200: '#e2e8f0',
-      300: '#cbd5e1',
-      400: '#94a3b8',
-      500: '#64748b',
-      600: '#475569',
-      700: '#334155',
-      800: '#1e293b',
-      900: '#0f172a',
+      50: '#1a1a2e',
+      100: '#16213e',
+      200: '#1f2937',
+      300: '#374151',
+      400: '#4b5563',
+      500: '#6b7280',
+      600: '#9ca3af',
+      700: '#d1d5db',
+      800: '#e5e7eb',
+      900: '#f3f4f6',
     },
   },
   typography: {
@@ -137,9 +137,9 @@ function AppContent({ currentView, onNavigate }) {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+        background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)'
       }}>
-        <Typography variant="h6" sx={{ color: '#64748b' }}>
+        <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
           Loading...
         </Typography>
       </Box>

@@ -13,7 +13,7 @@ const auth = require('../middleware/auth');
  */
 router.post(
   '/',
-  auth.optional, // Optional auth for now, can be made required later
+  auth.required,
   [
     body('query')
       .trim()
@@ -27,8 +27,8 @@ router.post(
       .optional()
       .isString()
       .withMessage('sessionId must be a string')
-      .isUUID()
-      .withMessage('sessionId must be a valid UUID')
+      .isLength({ min: 1, max: 100 })
+      .withMessage('sessionId must be between 1 and 100 characters'),
   ],
   async (req, res) => {
     try {
@@ -44,15 +44,17 @@ router.post(
 
       const { query, sessionId: clientSessionId } = req.body;
       
-      // Generate or use provided session ID
-      const sessionId = clientSessionId || chatService.generateSessionId();
+      // Validate and use session ID - regenerate if invalid
+      const sessionId = (clientSessionId && chatService.isValidSessionId(clientSessionId))
+        ? clientSessionId
+        : chatService.generateSessionId();
       
       // Process chat with streaming
       await chatService.processChatWithStreaming({
         query,
         sessionId,
         options: {
-          userId: req.user?.id || 'anonymous'
+          userId: req.user.id
         }
       }, res);
 
@@ -213,9 +215,9 @@ router.delete('/sessions/:sessionId', auth.required, async (req, res) => {
       });
     }
 
-    const deleted = await chatService.deleteSession(req.user.id, sessionId);
+    const result = await chatService.deleteSession(req.user.id, sessionId);
 
-    if (!deleted) {
+    if (!result?.deletedCount) {
       return res.status(404).json({
         success: false,
         message: 'Session not found or you do not have permission to delete it'
@@ -254,7 +256,7 @@ router.get('/stats/:sessionId', auth.required, async (req, res) => {
       });
     }
 
-    const stats = await chatService.getSessionStats(sessionId);
+    const stats = await chatService.getSessionStats(req.user.id, sessionId);
 
     res.json({
       success: true,
@@ -302,8 +304,16 @@ router.post('/suggest', auth.optional, [
 
     const { sessionId, chunks = [] } = req.body;
 
+    if (!req.user?.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
     const suggestions = await chatService.getSuggestedQuestions(
-      sessionId, 
+      req.user.id,
+      sessionId,
       chunks
     );
 

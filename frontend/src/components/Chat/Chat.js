@@ -1,22 +1,30 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  CircularProgress, 
-  Snackbar, 
+import {
+  Box,
+  Typography,
+  Paper,
+  CircularProgress,
+  Snackbar,
   Alert,
   IconButton,
   Tooltip,
   Divider,
   Chip,
   AppBar,
-  Toolbar
+  Toolbar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  ListItemIcon
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import HistoryIcon from '@mui/icons-material/History';
-import SettingsIcon from '@mui/icons-material/Settings';
 import BotIcon from '@mui/icons-material/SmartToy';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import MenuIcon from '@mui/icons-material/Menu';
 import { styled } from '@mui/material/styles';
 
 // Import components
@@ -35,31 +43,40 @@ const ChatContainer = styled(Paper)(({ theme }) => ({
   position: 'relative',
   overflow: 'hidden',
   borderRadius: 0,
-  background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+  background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
   boxShadow: 'none',
 }));
 
 const HeaderAppBar = styled(AppBar)(({ theme }) => ({
-  background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%)',
-  borderBottom: `1px solid ${theme.palette.divider}`,
+  background: 'rgba(255, 255, 255, 0.05)',
+  backdropFilter: 'blur(20px)',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
   color: theme.palette.text.primary,
   boxShadow: 'none',
 }));
 
 const StatusChip = styled(Chip)(({ theme, status }) => ({
   fontWeight: 500,
-  backgroundColor: status === 'connected' 
+  backgroundColor: status === 'connected'
     ? theme.palette.success.light + '20'
     : status === 'searching'
     ? theme.palette.warning.light + '20'
     : theme.palette.grey[100],
-  color: status === 'connected' 
+  color: status === 'connected'
     ? theme.palette.success.dark
     : status === 'searching'
     ? theme.palette.warning.dark
     : theme.palette.text.secondary,
   '& .MuiChip-label': {
     fontWeight: 500,
+  },
+}));
+
+const SidebarDrawer = styled(Drawer)(({ theme }) => ({
+  '& .MuiDrawer-paper': {
+    width: 280,
+    background: 'linear-gradient(180deg, rgba(26, 26, 46, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%)',
+    borderRight: '1px solid rgba(255, 255, 255, 0.1)',
   },
 }));
 
@@ -75,6 +92,9 @@ const Chat = () => {
   const [showCitations, setShowCitations] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   
   const messagesEndRef = useRef(null);
   const eventSourceRef = useRef(null);
@@ -92,6 +112,13 @@ const Chat = () => {
     });
   };
 
+  // Validate UUID v4 format
+  const isValidSessionId = (sessionId) => {
+    if (!sessionId || typeof sessionId !== 'string') return false;
+    const uuidv4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidv4Regex.test(sessionId);
+  };
+
   // Clean up event source
   const cleanupStream = useCallback(() => {
     if (eventSourceRef.current) {
@@ -103,10 +130,81 @@ const Chat = () => {
 
   // Initialize session on component mount
   useEffect(() => {
-    const newSessionId = generateSessionId();
-    setSessionId(newSessionId);
-    setIsLoading(false);
-    setConnectionStatus('connected');
+    const init = async () => {
+      const token = localStorage.getItem('token');
+      const persistedSessionId = localStorage.getItem('chatSessionId');
+
+      try {
+        if (token) {
+          // Prefer restoring the last used session first
+          const candidateSessionId = persistedSessionId;
+
+          if (candidateSessionId) {
+            setSessionId(candidateSessionId);
+            const historyRes = await fetch(`${API_BASE_URL}/api/chat/history/${candidateSessionId}?limit=100&includeContext=true`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (historyRes.ok) {
+              const historyJson = await historyRes.json();
+              const loaded = historyJson?.data?.messages || historyJson?.data?.data?.messages || [];
+              if (Array.isArray(loaded) && loaded.length > 0) {
+                setMessages(loaded.map(m => ({
+                  id: m._id || `${m.role}_${m.createdAt}`,
+                  role: m.role,
+                  content: m.content,
+                  timestamp: m.createdAt || m.updatedAt || new Date().toISOString(),
+                  chunks: m.chunks || [],
+                  metadata: m.metadata || {}
+                })));
+              }
+            }
+          } else {
+            // Otherwise, load latest session from server
+            const sessionsRes = await fetch(`${API_BASE_URL}/api/chat/history/sessions?limit=1`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (sessionsRes.ok) {
+              const sessionsJson = await sessionsRes.json();
+              const sessions = sessionsJson?.data || [];
+              const latest = sessions?.[0];
+              if (latest?.sessionId) {
+                setSessionId(latest.sessionId);
+                localStorage.setItem('chatSessionId', latest.sessionId);
+                const historyRes = await fetch(`${API_BASE_URL}/api/chat/history/${latest.sessionId}?limit=100&includeContext=true`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (historyRes.ok) {
+                  const historyJson = await historyRes.json();
+                  const loaded = historyJson?.data?.messages || historyJson?.data?.data?.messages || [];
+                  if (Array.isArray(loaded)) {
+                    setMessages(loaded.map(m => ({
+                      id: m._id || `${m.role}_${m.createdAt}`,
+                      role: m.role,
+                      content: m.content,
+                      timestamp: m.createdAt || m.updatedAt || new Date().toISOString(),
+                      chunks: m.chunks || [],
+                      metadata: m.metadata || {}
+                    })));
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Fall back to new session
+      }
+
+      setSessionId(prev => {
+        const finalId = prev || generateSessionId();
+        localStorage.setItem('chatSessionId', finalId);
+        return finalId;
+      });
+      setIsLoading(false);
+      setConnectionStatus('connected');
+    };
+
+    init();
     
     return () => {
       cleanupStream();
@@ -129,10 +227,12 @@ const Chat = () => {
   // Fetch suggestions
   const fetchSuggestions = useCallback(async (chunks = []) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/api/chat/suggest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           sessionId,
@@ -381,6 +481,19 @@ const Chat = () => {
   const handleSendMessage = useCallback(async (message) => {
     if (!message.trim() || isSending) return;
 
+    // Validate and fix sessionId if needed
+    if (sessionId && !isValidSessionId(sessionId)) {
+      const newId = generateSessionId();
+      console.warn('Invalid sessionId, regenerating:', newId);
+      setSessionId(newId);
+      localStorage.setItem('chatSessionId', newId);
+      return;
+    }
+
+    if (sessionId) {
+      localStorage.setItem('chatSessionId', sessionId);
+    }
+
     setIsSending(true);
     setError(null);
     setStreamingContent('');
@@ -397,15 +510,20 @@ const Chat = () => {
     setMessages(prev => [...prev, userMessage]);
 
     try {
+      const token = localStorage.getItem('token');
+      const effectiveSessionId = sessionId || generateSessionId();
+      console.log('📤 Sending chat message:', { message: message.substring(0, 50), sessionId: effectiveSessionId, hasToken: !!token });
+
       // Send the message and handle streaming response
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           query: message,
-          sessionId: sessionId,
+          sessionId: effectiveSessionId,
         }),
       });
 
@@ -434,6 +552,117 @@ const Chat = () => {
     const newSessionId = generateSessionId();
     setSessionId(newSessionId);
   }, []);
+
+  // Fetch chat sessions
+  const fetchChatSessions = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setIsLoadingSessions(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat/sessions?limit=50`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setChatSessions(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching sessions:', error);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, []);
+
+  // Handle selecting a session
+  const handleSelectSession = useCallback(async (selectedSessionId) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setSessionId(selectedSessionId);
+    localStorage.setItem('chatSessionId', selectedSessionId);
+    setMessages([]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat/history/${selectedSessionId}?limit=100&includeContext=true`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const loaded = data?.data?.messages || data?.data?.data?.messages || [];
+        if (Array.isArray(loaded)) {
+          setMessages(loaded.map(m => ({
+            id: m._id || `${m.role}_${m.createdAt}`,
+            role: m.role,
+            content: m.content,
+            timestamp: m.createdAt || m.updatedAt || new Date().toISOString(),
+            chunks: m.chunks || [],
+            metadata: m.metadata || {}
+          })));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading session:', error);
+    } finally {
+      setIsLoading(false);
+      setSidebarOpen(false);
+    }
+  }, []);
+
+  // Handle creating new chat
+  const handleNewChat = useCallback(() => {
+    const newSessionId = generateSessionId();
+    setSessionId(newSessionId);
+    localStorage.setItem('chatSessionId', newSessionId);
+    setMessages([]);
+    setSidebarOpen(false);
+  }, []);
+
+  // Handle deleting a session
+  const handleDeleteSession = useCallback(async (e, sessionIdToDelete) => {
+    e.stopPropagation();
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionIdToDelete}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setChatSessions(prev => prev.filter(s => s.sessionId !== sessionIdToDelete));
+        if (sessionId === sessionIdToDelete) {
+          handleNewChat();
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting session:', error);
+    }
+  }, [sessionId, handleNewChat]);
+
+  // Format date for session display
+  const formatDate = useCallback((dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  }, []);
+
+  // Fetch chat sessions when sidebar opens
+  useEffect(() => {
+    if (sidebarOpen) {
+      fetchChatSessions();
+    }
+  }, [sidebarOpen, fetchChatSessions]);
 
   // Retry last message
   const handleRetry = useCallback(() => {
@@ -490,20 +719,28 @@ const Chat = () => {
       <HeaderAppBar position="static" elevation={0}>
         <Toolbar>
           <Box display="flex" alignItems="center" gap={2} flex={1}>
+            <Tooltip title="Chat History">
+              <IconButton
+                size="small"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Tooltip>
             <BotIcon sx={{ color: 'primary.main' }} />
             <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
               OpsMind AI Chat
             </Typography>
-            <StatusChip 
+            <StatusChip
               size="small"
               status={connectionStatus}
               label={`${statusInfo.icon} ${statusInfo.text}`}
             />
           </Box>
-          
+
           <Box display="flex" gap={1}>
             <Tooltip title="Clear Chat">
-              <IconButton 
+              <IconButton
                 onClick={handleClearChat}
                 disabled={isSending}
                 size="small"
@@ -512,18 +749,103 @@ const Chat = () => {
               </IconButton>
             </Tooltip>
             <Tooltip title="Chat History">
-              <IconButton size="small">
+              <IconButton
+                size="small"
+                onClick={() => setSidebarOpen(true)}
+              >
                 <HistoryIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Settings">
-              <IconButton size="small">
-                <SettingsIcon />
               </IconButton>
             </Tooltip>
           </Box>
         </Toolbar>
       </HeaderAppBar>
+
+      {/* Sidebar Drawer */}
+      <SidebarDrawer
+        anchor="left"
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      >
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Chat History
+          </Typography>
+          <ListItemButton
+            onClick={handleNewChat}
+            sx={{
+              mb: 1,
+              borderRadius: 2,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #667eea 100%)',
+              },
+            }}
+          >
+            <ListItemIcon>
+              <AddIcon sx={{ color: 'white' }} />
+            </ListItemIcon>
+            <ListItemText primary="New Chat" />
+          </ListItemButton>
+          <Divider sx={{ mb: 2, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+          {isLoadingSessions ? (
+            <Box display="flex" justifyContent="center" p={2}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : chatSessions.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+              No chat history yet
+            </Typography>
+          ) : (
+            <List>
+              {chatSessions.map((session) => (
+                <ListItem
+                  key={session.sessionId}
+                  disablePadding
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={(e) => handleDeleteSession(e, session.sessionId)}
+                      sx={{ color: 'text.secondary' }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  }
+                >
+                  <ListItemButton
+                    selected={session.sessionId === sessionId}
+                    onClick={() => handleSelectSession(session.sessionId)}
+                    sx={{
+                      borderRadius: 1,
+                      mb: 0.5,
+                      '&.Mui-selected': {
+                        background: 'rgba(102, 126, 234, 0.15)',
+                      },
+                      '&.Mui-selected:hover': {
+                        background: 'rgba(102, 126, 234, 0.2)',
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={session.title || 'New Chat'}
+                      primaryTypographyProps={{
+                        noWrap: true,
+                        variant: 'body2',
+                      }}
+                      secondary={formatDate(session.lastMessageAt || session.createdAt)}
+                      secondaryTypographyProps={{
+                        variant: 'caption',
+                        color: 'text.secondary',
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </Box>
+      </SidebarDrawer>
 
       {/* Main Content */}
       <Box display="flex" flex={1} overflow="hidden">
@@ -537,12 +859,11 @@ const Chat = () => {
           
           {/* Suggestions */}
           {showSuggestions && suggestions.length > 0 && (
-            <Box 
-              sx={{ 
-                p: 2, 
-                borderTop: '1px solid',
-                borderColor: 'divider',
-                background: 'rgba(37, 99, 235, 0.02)'
+            <Box
+              sx={{
+                p: 2,
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(255, 255, 255, 0.02)'
               }}
             >
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
@@ -571,7 +892,7 @@ const Chat = () => {
           )}
           
           {/* Input Area */}
-          <Box sx={{ borderTop: '1px solid', borderColor: 'divider' }}>
+          <Box sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <InputArea
               onSendMessage={handleSendMessage}
               disabled={isSending || connectionStatus === 'error'}

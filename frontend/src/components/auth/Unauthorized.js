@@ -7,7 +7,7 @@ const Unauthorized = ({ onNavigate }) => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -19,11 +19,11 @@ const Unauthorized = ({ onNavigate }) => {
           p: 6,
           maxWidth: 500,
           textAlign: 'center',
-          background: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
+          background: 'rgba(255, 255, 255, 0.08)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
           borderRadius: 4,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 18px 60px rgba(0, 0, 0, 0.35)',
         }}
       >
         <Typography
@@ -42,7 +42,7 @@ const Unauthorized = ({ onNavigate }) => {
           variant="h4"
           sx={{
             fontWeight: 600,
-            color: '#1e293b',
+            color: 'rgba(255, 255, 255, 0.92)',
             mb: 2,
           }}
         >
@@ -52,7 +52,7 @@ const Unauthorized = ({ onNavigate }) => {
         <Typography
           variant="body1"
           sx={{
-            color: '#64748b',
+            color: 'rgba(255, 255, 255, 0.7)',
             mb: 4,
             lineHeight: 1.6,
           }}
@@ -66,9 +66,9 @@ const Unauthorized = ({ onNavigate }) => {
             startIcon={<Home />}
             onClick={() => onNavigate('landing')}
             sx={{
-              background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               '&:hover': {
-                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #667eea 100%)',
               },
             }}
           >

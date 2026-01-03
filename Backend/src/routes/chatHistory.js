@@ -159,7 +159,7 @@ router.delete(
       // Delete the chat session
       const result = await chatService.deleteSession(userId, sessionId);
       
-      if (result.deletedCount === 0) {
+      if (!result?.deletedCount) {
         return res.status(404).json({
           success: false,
           error: 'Chat session not found or already deleted'

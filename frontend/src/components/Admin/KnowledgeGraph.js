@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Grid, 
-  Card, 
-  CardContent, 
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
   Button,
   List,
   ListItem,
@@ -16,7 +16,8 @@ import {
   IconButton,
   Tooltip,
   Alert,
-  Avatar
+  Avatar,
+  Paper
 } from '@mui/material';
 import {
   BarChart,
@@ -40,11 +41,14 @@ import {
   Download as DownloadIcon,
   Assessment as AssessmentIcon,
   Speed as SpeedIcon,
-  SmartToy as BotIcon
+  SmartToy as BotIcon,
+  UploadFile as UploadFileIcon
 } from '@mui/icons-material';
 import api from '../../services/api';
 import UserManagement from './UserManagement';
 import { useAuth } from '../../contexts/AuthContext';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 const COLORS = ['#2563eb', '#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -55,6 +59,59 @@ const KnowledgeGraph = () => {
   const [error, setError] = useState(null);
   const [currentTab, setCurrentTab] = useState(0);
   const [timeRange, setTimeRange] = useState('7d');
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setError('Only PDF files are allowed');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Authentication required');
+      return;
+    }
+
+    setUploading(true);
+    setUploadSuccess(null);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append('pdf', file);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUploadSuccess(`File uploaded successfully! Processed ${data.chunks} chunks.`);
+        loadAnalyticsData();
+      } else {
+        setError(`Upload failed: ${data.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const loadAnalyticsData = useCallback(async () => {
     try {
@@ -135,7 +192,13 @@ const KnowledgeGraph = () => {
     return (
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -155,7 +218,13 @@ const KnowledgeGraph = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -175,7 +244,13 @@ const KnowledgeGraph = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -195,7 +270,13 @@ const KnowledgeGraph = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card>
+          <Card
+            sx={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
@@ -221,25 +302,31 @@ const KnowledgeGraph = () => {
     if (!analyticsData?.hourlyUsage) return null;
 
     return (
-      <Card>
+      <Card
+        sx={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Usage Trends
           </Typography>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={analyticsData.hourlyUsage}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                tick={{ fontSize: 12 }}
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 12, fill: 'rgba(255, 255, 255, 0.7)' }}
               />
-              <YAxis tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12, fill: 'rgba(255, 255, 255, 0.7)' }} />
               <ChartTooltip />
-              <Area 
-                type="monotone" 
-                dataKey="queryCount" 
-                stroke="#2563eb" 
-                fill="#2563eb" 
+              <Area
+                type="monotone"
+                dataKey="queryCount"
+                stroke="#667eea"
+                fill="#667eea"
                 fillOpacity={0.3}
               />
             </AreaChart>
@@ -253,24 +340,30 @@ const KnowledgeGraph = () => {
     if (!analyticsData?.documentAnalytics) return null;
 
     return (
-      <Card>
+      <Card
+        sx={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Document Analytics
           </Typography>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={analyticsData.documentAnalytics}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="fileName" 
-                tick={{ fontSize: 12 }}
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+              <XAxis
+                dataKey="fileName"
+                tick={{ fontSize: 12, fill: 'rgba(255, 255, 255, 0.7)' }}
                 angle={-45}
                 textAnchor="end"
                 height={80}
               />
-              <YAxis tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12, fill: 'rgba(255, 255, 255, 0.7)' }} />
               <ChartTooltip />
-              <Bar dataKey="accessCount" fill="#7c3aed" />
+              <Bar dataKey="accessCount" fill="#764ba2" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -282,7 +375,13 @@ const KnowledgeGraph = () => {
     if (!analyticsData?.topicAnalytics) return null;
 
     return (
-      <Card>
+      <Card
+        sx={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Topic Distribution
@@ -297,6 +396,7 @@ const KnowledgeGraph = () => {
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="totalMentions"
+                label={{ fill: 'rgba(255, 255, 255, 0.7)' }}
               >
                 {analyticsData.topicAnalytics.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -320,7 +420,13 @@ const KnowledgeGraph = () => {
     ];
 
     return (
-      <Card>
+      <Card
+        sx={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Recent Activity
@@ -384,14 +490,56 @@ const KnowledgeGraph = () => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        p: 3,
+        background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
+        minHeight: '100vh',
+      }}
+    >
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="div" sx={{ fontWeight: 600 }}>
+        <Typography
+          variant="h4"
+          component="div"
+          sx={{
+            fontWeight: 600,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
           Admin Dashboard
         </Typography>
         
         <Box display="flex" gap={2}>
+          {/* File Upload Button */}
+          <Tooltip title="Upload PDF Document">
+            <Button
+              variant="contained"
+              startIcon={uploading ? <CircularProgress size={16} color="inherit" /> : <UploadFileIcon />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              sx={{
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                },
+              }}
+            >
+              {uploading ? 'Uploading...' : 'Upload PDF'}
+            </Button>
+          </Tooltip>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+
           {/* Time Range Selector */}
           <Box>
             <Button
@@ -430,6 +578,17 @@ const KnowledgeGraph = () => {
           </Tooltip>
         </Box>
       </Box>
+
+      {/* Upload Success Message */}
+      {uploadSuccess && (
+        <Alert 
+          severity="success" 
+          sx={{ mb: 3 }}
+          onClose={() => setUploadSuccess(null)}
+        >
+          {uploadSuccess}
+        </Alert>
+      )}
 
       {/* Overview Cards */}
       {renderOverviewCards()}

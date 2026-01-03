@@ -6,6 +6,7 @@ const { processPDF } = require("../services/pdfService");
 const { embedBatch } = require("../services/embedding");
 const DocumentChunk = require("../models/DocumentChunk");
 const crypto = require('crypto');
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -48,8 +49,8 @@ router.get('/', (req, res) => {
   });
 });
 
-// POST /upload
-router.post("/", upload.single("pdf"), async (req, res) => {
+// POST /upload - Admin only
+router.post("/", auth.required, auth.hasRole('admin'), upload.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       console.log("No file was uploaded");

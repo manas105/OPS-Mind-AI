@@ -18,39 +18,38 @@ const StyledMessage = styled(Paper, {
   maxWidth: '75%',
   marginLeft: isUser ? 'auto' : theme.spacing(2),
   marginRight: isUser ? theme.spacing(2) : 'auto',
-  backgroundColor: isError 
-    ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)'
-    : isUser 
-      ? 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)' // Light blue background
-      : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-  color: isError 
-    ? theme.palette.error.main
-    : isUser 
-      ? '#000000 !important' // Black text for user messages
-      : '#1e293b', // Dark text for assistant messages
+  background: isError
+    ? 'rgba(239, 68, 68, 0.12)'
+    : isUser
+      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      : 'rgba(255, 255, 255, 0.06)',
+  backdropFilter: isUser ? 'none' : 'blur(18px)',
+  color: isError
+    ? theme.palette.error.light
+    : theme.palette.text.primary,
   borderRadius: 16,
   wordBreak: 'break-word',
   border: isError 
-    ? `1px solid ${theme.palette.error.main}` 
+    ? `1px solid rgba(239, 68, 68, 0.4)` 
     : isUser 
-      ? '1px solid transparent'
-      : `1px solid ${theme.palette.grey[200]}`,
+      ? '1px solid rgba(255, 255, 255, 0.12)'
+      : '1px solid rgba(255, 255, 255, 0.12)',
   opacity: isStreaming ? 0.85 : 1,
   transition: 'all 0.3s ease-in-out',
   position: 'relative',
   overflow: 'hidden',
   boxShadow: isUser 
-    ? '0 4px 12px rgba(37, 99, 235, 0.15)'
+    ? '0 10px 30px rgba(102, 126, 234, 0.25)'
     : isError
       ? '0 4px 12px rgba(239, 68, 68, 0.15)'
-      : '0 2px 8px rgba(0, 0, 0, 0.04)',
+      : '0 8px 24px rgba(0, 0, 0, 0.25)',
   '&:hover': {
     transform: 'translateY(-1px)',
     boxShadow: isUser 
-      ? '0 6px 16px rgba(37, 99, 235, 0.2)'
+      ? '0 14px 40px rgba(102, 126, 234, 0.3)'
       : isError
         ? '0 6px 16px rgba(239, 68, 68, 0.2)'
-        : '0 4px 12px rgba(0, 0, 0, 0.08)',
+        : '0 12px 34px rgba(0, 0, 0, 0.32)',
   },
   '&:before': isStreaming ? {
     content: '""',
@@ -59,7 +58,7 @@ const StyledMessage = styled(Paper, {
     left: 0,
     right: 0,
     height: '3px',
-    background: 'linear-gradient(90deg, transparent, #2563eb, transparent)',
+    background: 'linear-gradient(90deg, transparent, #667eea, transparent)',
     animation: 'shimmer 2s infinite',
   } : {},
   '@keyframes shimmer': {
@@ -93,13 +92,13 @@ const Message = ({ message }) => {
       >
         <Avatar 
           sx={{ 
-            bgcolor: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             width: 36,
             height: 36,
             fontSize: '0.875rem',
             fontWeight: 600,
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            border: '2px solid #ffffff',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
           }}
         >
           U
@@ -115,7 +114,7 @@ const Message = ({ message }) => {
             <Typography 
               variant="body1" 
               sx={{
-                color: '#1e293b !important', // Dark text for user messages
+                color: 'rgba(255, 255, 255, 0.92)',
                 fontWeight: 400,
                 lineHeight: 1.6,
                 fontSize: '16px',
@@ -197,11 +196,7 @@ const Message = ({ message }) => {
         variant="body1" 
         component="div"
         sx={{
-          color: isUser 
-            ? '#1e293b !important' // Dark text for user messages
-            : isError 
-              ? 'error.main' 
-              : '#1e293b', // Dark text for assistant messages
+          color: isError ? 'error.light' : 'rgba(255, 255, 255, 0.92)',
           fontWeight: 400,
           lineHeight: 1.6,
           fontSize: '16px',
@@ -218,7 +213,7 @@ const Message = ({ message }) => {
               width: '8px',
               height: '16px',
               ml: 0.5,
-              bgcolor: isUser ? 'white' : '#1e293b',
+              bgcolor: 'rgba(255, 255, 255, 0.9)',
               animation: 'blink 1s step-end infinite',
               '@keyframes blink': {
                 '0%, 100%': { opacity: 1 },
@@ -244,17 +239,17 @@ const Message = ({ message }) => {
     >
       <Avatar 
         sx={{ 
-          bgcolor: isError 
+          background: isError 
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
             : isUser 
-              ? 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)'
-              : 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)',
+              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              : 'linear-gradient(135deg, #764ba2 0%, #8b5cf6 100%)',
           width: 36,
           height: 36,
           fontSize: '0.875rem',
           fontWeight: 600,
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-          border: '2px solid #ffffff',
+          border: '2px solid rgba(255, 255, 255, 0.3)',
         }}
       >
         {isError ? '!' : isUser ? 'U' : '🤖'}

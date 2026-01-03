@@ -25,18 +25,18 @@ const Login = ({ onNavigate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     console.log('🔑 Login form submitted with:', { email, password: '***' });
-    
+
     try {
       setError('');
       setLoading(true);
       console.log('📞 Calling login function...');
-      await login(email, password);
+      const loggedInUser = await login(email, password);
       console.log('✅ Login successful, navigating based on role...');
-      
-      // Redirect based on user role
-      if (user?.role === 'admin') {
+
+      // Redirect based on user role using the returned user object
+      if (loggedInUser?.role === 'admin') {
         onNavigate('admin');
       } else {
         onNavigate('chat');
@@ -50,19 +50,51 @@ const Login = ({ onNavigate }) => {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h5" align="center" gutterBottom>
-            Sign in to OpsMind AI
-          </Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <Container component="main" maxWidth="xs">
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              width: '100%',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: 3,
+            }}
+          >
+            <Typography
+              component="h1"
+              variant="h5"
+              align="center"
+              gutterBottom
+              sx={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontWeight: 600,
+              }}
+            >
+              Sign in to OpsMind AI
+            </Typography>
           
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -162,6 +194,7 @@ const Login = ({ onNavigate }) => {
         </Paper>
       </Box>
     </Container>
+    </Box>
   );
 };
 

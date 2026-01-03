@@ -1,4 +1,5 @@
-const ChatMessage = require('../models/Chat');
+const mongoose = require('mongoose');
+const ChatMessage = require('../models/ChatMessage');
 const { v4: uuidv4 } = require('uuid');
 const vectorSearchService = require('./vectorSearchService');
 const promptService = require('./promptService');
@@ -13,10 +14,20 @@ class ChatService {
 
   /**
    * Generate a unique session ID
-   * @returns {string} Unique session identifier
+   * @returns {string} Unique session identifier (UUID v4)
    */
   generateSessionId() {
     return uuidv4();
+  }
+
+  /**
+   * Validate if a string is a valid UUID v4
+   * @param {string} sessionId - Session ID to validate
+   * @returns {boolean} True if valid UUID v4
+   */
+  isValidSessionId(sessionId) {
+    const uuidv4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidv4Regex.test(sessionId);
   }
 
   /**
@@ -159,7 +170,7 @@ class ChatService {
 
       // Save user message
       await this.saveMessage({
-        userId: options.userId || 'anonymous',
+        userId: options.userId,
         sessionId,
         role: 'user',
         content: query
@@ -197,7 +208,7 @@ class ChatService {
         });
         
         await this.saveMessage({
-          userId: options.userId || 'anonymous',
+          userId: options.userId,
           sessionId,
           role: 'assistant',
           content: fallbackResponse,
@@ -216,7 +227,7 @@ class ChatService {
       // Create prompt with context
       const promptData = promptService.createChatPrompt(relevantChunks, query, {
         sessionId,
-        previousMessages: await this.getRecentMessages(sessionId, 6)
+        previousMessages: await this.getRecentMessages(options.userId, sessionId, 6)
       });
 
       // Generate response with streaming
@@ -267,7 +278,7 @@ class ChatService {
 
       // Save assistant message
       await this.saveMessage({
-        userId: options.userId || 'anonymous',
+        userId: options.userId,
         sessionId,
         role: 'assistant',
         content: responseWithCitations,
@@ -326,9 +337,9 @@ class ChatService {
    * @param {number} limit - Number of recent messages
    * @returns {Promise<Array>} Recent messages
    */
-  async getRecentMessages(sessionId, limit = 6) {
+  async getRecentMessages(userId, sessionId, limit = 6) {
     try {
-      const messages = await ChatMessage.find({ sessionId })
+      const messages = await ChatMessage.find({ userId, sessionId })
         .sort({ createdAt: -1 })
         .limit(limit)
         .select('role content')
@@ -351,8 +362,9 @@ class ChatService {
     const { limit = 50, offset = 0 } = options;
 
     try {
+      const userObjectId = new mongoose.Types.ObjectId(userId);
       const sessions = await ChatMessage.aggregate([
-        { $match: { userId } },
+        { $match: { userId: userObjectId } },
         {
           $group: {
             _id: '$sessionId',
@@ -382,6 +394,10 @@ class ChatService {
     }
   }
 
+  async getRecentSessions(userId, limit = 10) {
+    return this.getUserSessions(userId, { limit, offset: 0 });
+  }
+
   /**
    * Delete a chat session
    * @param {string} userId - User ID
@@ -390,11 +406,19 @@ class ChatService {
    */
   async deleteSession(userId, sessionId) {
     try {
-      const result = await ChatMessage.deleteMany({ userId, sessionId });
-      return result.deletedCount > 0;
+      return await ChatMessage.deleteMany({ userId, sessionId });
     } catch (error) {
       console.error('Error deleting session:', error);
       throw new Error('Failed to delete session');
+    }
+  }
+
+  async deleteAllUserSessions(userId) {
+    try {
+      return await ChatMessage.deleteMany({ userId });
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+      throw new Error('Failed to clear chat history');
     }
   }
 
@@ -403,10 +427,10 @@ class ChatService {
    * @param {string} sessionId - Session ID
    * @returns {Promise<Object>} Session statistics
    */
-  async getSessionStats(sessionId) {
+  async getSessionStats(userId, sessionId) {
     try {
       const stats = await ChatMessage.aggregate([
-        { $match: { sessionId } },
+        { $match: { userId: new mongoose.Types.ObjectId(userId), sessionId } },
         {
           $group: {
             _id: null,
@@ -455,10 +479,10 @@ class ChatService {
    * @param {Array} recentChunks - Recent chunks used
    * @returns {Promise<Array>} Suggested questions
    */
-  async getSuggestedQuestions(sessionId, recentChunks) {
+  async getSuggestedQuestions(userId, sessionId, recentChunks) {
     try {
       // Get recent queries from the session
-      const recentMessages = await this.getRecentMessages(sessionId, 10);
+      const recentMessages = await this.getRecentMessages(userId, sessionId, 10);
       const lastQuery = recentMessages
         .filter(msg => msg.role === 'user')
         .pop()?.content || '';

@@ -26,9 +26,10 @@ const CitationPanelContainer = styled(Paper)(({ theme }) => ({
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  background: 'linear-gradient(135deg, #fafbfc 0%, #f1f5f9 100%)',
-  borderLeft: `3px solid ${theme.palette.primary.main}`,
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+  background: 'rgba(255, 255, 255, 0.05)',
+  backdropFilter: 'blur(20px)',
+  borderLeft: `1px solid rgba(255, 255, 255, 0.12)`,
+  boxShadow: 'none',
 }));
 
 const HeaderBox = styled(Box)(({ theme }) => ({
@@ -36,8 +37,8 @@ const HeaderBox = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: theme.spacing(2),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  background: 'rgba(37, 99, 235, 0.05)',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+  background: 'rgba(255, 255, 255, 0.03)',
 }));
 
 const ContentBox = styled(Box)(({ theme }) => ({
@@ -50,18 +51,18 @@ const CitationItem = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(2),
   padding: theme.spacing(2),
   borderRadius: theme.shape.borderRadius,
-  background: theme.palette.background.paper,
-  border: `1px solid ${theme.palette.divider}`,
+  background: 'rgba(255, 255, 255, 0.06)',
+  border: '1px solid rgba(255, 255, 255, 0.12)',
   transition: 'all 0.2s ease-in-out',
   '&:hover': {
-    boxShadow: theme.shadows[2],
+    boxShadow: theme.shadows[4],
     transform: 'translateY(-1px)',
   },
 }));
 
 const ConfidenceChip = styled(Chip)(({ theme, confidence }) => {
   let color = theme.palette.grey[500];
-  let backgroundColor = theme.palette.grey[100];
+  let backgroundColor = 'rgba(255, 255, 255, 0.08)';
   
   if (confidence >= 0.8) {
     color = theme.palette.success.dark;
@@ -242,7 +243,7 @@ const CitationPanel = ({ citations, onClose }) => {
                     <Box mb={2}>
                       <Typography variant="body2" sx={{ 
                         fontFamily: 'monospace',
-                        background: 'rgba(37, 99, 235, 0.05)',
+                        background: 'rgba(255, 255, 255, 0.04)',
                         p: 1,
                         borderRadius: 1,
                         fontSize: '0.8rem'
@@ -290,9 +291,9 @@ const CitationPanel = ({ citations, onClose }) => {
 
         {/* Summary Statistics */}
         <Box mt={3} p={2} sx={{ 
-          background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%)',
+          background: 'rgba(255, 255, 255, 0.04)',
           borderRadius: 2,
-          border: `1px solid rgba(37, 99, 235, 0.1)`
+          border: '1px solid rgba(255, 255, 255, 0.12)'
         }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
             Citation Summary

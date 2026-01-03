@@ -20,6 +20,14 @@ const chatMessageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+
+  chunks: [{
+    chunkId: String,
+    text: String,
+    source: String,
+    score: Number,
+    pages: [Number]
+  }],
   
   // Role: 'user' or 'assistant'
   role: {
@@ -38,7 +46,9 @@ const chatMessageSchema = new mongoose.Schema({
   metadata: {
     // Any additional data like tokens used, model version, etc.
     tokens: Number,
-    model: String
+    model: String,
+    responseTime: Number,
+    citations: mongoose.Schema.Types.Mixed
   }
 }, {
   timestamps: true

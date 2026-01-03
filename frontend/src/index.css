@@ -1,17 +1,17 @@
 /* Base Styles */
 :root {
-  --primary-color: #1976d2;
-  --primary-light: #42a5f5;
-  --primary-dark: #1565c0;
-  --secondary-color: #9c27b0;
-  --text-primary: rgba(0, 0, 0, 0.87);
-  --text-secondary: rgba(0, 0, 0, 0.6);
-  --background: #f5f5f5;
-  --surface: #ffffff;
+  --primary-color: #667eea;
+  --primary-light: #8b5cf6;
+  --primary-dark: #764ba2;
+  --secondary-color: #764ba2;
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --background: #000000;
+  --surface: rgba(255, 255, 255, 0.08);
   --error: #d32f2f;
   --success: #388e3c;
   --warning: #f57c00;
-  --divider: rgba(0, 0, 0, 0.12);
+  --divider: rgba(255, 255, 255, 0.12);
 }
 
 * {
@@ -46,17 +46,17 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(255, 255, 255, 0.28);
 }
 
 /* Animations */

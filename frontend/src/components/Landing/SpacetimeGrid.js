@@ -49,16 +49,22 @@ const SpacetimeGrid = () => {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < distortionRadius && distance > 0) {
-        const force = (1 - distance / distortionRadius) * distortionStrength;
         const angle = Math.atan2(dy, dx);
         
-        // Pull points toward the mouse (gravity effect)
-        const pullX = -Math.cos(angle) * force;
-        const pullY = -Math.sin(angle) * force;
+        // Create circular distortion around cursor
+        const force = (1 - distance / distortionRadius) * distortionStrength;
+        
+        // Tangential force for circular rotation (perpendicular to radial direction)
+        const tangentX = Math.sin(angle) * force;
+        const tangentY = -Math.cos(angle) * force;
+        
+        // Radial force for slight pull toward center
+        const radialX = -Math.cos(angle) * force * 0.3;
+        const radialY = -Math.sin(angle) * force * 0.3;
         
         return {
-          x: x + pullX,
-          y: y + pullY,
+          x: x + tangentX + radialX,
+          y: y + tangentY + radialY,
           intensity: (1 - distance / distortionRadius)
         };
       }
