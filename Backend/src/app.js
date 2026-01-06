@@ -26,7 +26,7 @@ const corsOrigins = (process.env.CORS_ORIGINS || '')
   .map(s => s.trim())
   .filter(Boolean);
 
-const allowedOrigins = corsOrigins.length > 0 ? corsOrigins : defaultCorsOrigins;
+const allowedOrigins = [...defaultCorsOrigins, ...corsOrigins];
 
 app.use(cors({
   origin: (origin, callback) => {
