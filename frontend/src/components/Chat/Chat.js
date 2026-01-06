@@ -32,14 +32,21 @@ import MessageList from './MessageList';
 import InputArea from './InputArea';
 import CitationPanel from './CitationPanel';
 
-// Normalize API base: allow REACT_APP_API_URL to be either http://host or http://host/api
-// and tolerate accidental leading "hhttps"/"hhttp"
+// Normalize API base: handle different API URL formats
 const RAW_API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 const CLEAN_API_URL = RAW_API_URL
   .replace(/^hhttps:/i, 'https:')
   .replace(/^hhttp:/i, 'http:');
-const API_BASE = CLEAN_API_URL.replace(/\/+$/, '').replace(/\/api$/, '');
-const API_URL = `${API_BASE}/api`;
+
+// Check if the base URL already includes /api
+const API_BASE = CLEAN_API_URL.replace(/\/+$/, '');
+if (API_BASE.endsWith('/api')) {
+  // Base URL already includes /api, use it directly
+  var API_URL = API_BASE;
+} else {
+  // Add /api to the base URL
+  var API_URL = `${API_BASE}/api`;
+}
 
 const ChatContainer = styled(Paper)(({ theme }) => ({
   display: 'flex',
@@ -148,7 +155,7 @@ const Chat = () => {
 
           if (candidateSessionId) {
             setSessionId(candidateSessionId);
-            const historyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/${candidateSessionId}?limit=100&includeContext=true`, {
+            const historyRes = await fetch(`${API_URL}/chat/history/${candidateSessionId}?limit=100&includeContext=true`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (historyRes.ok) {
@@ -167,7 +174,7 @@ const Chat = () => {
             }
           } else {
             // Otherwise, load latest session from server
-            const sessionsRes = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/sessions?limit=1`, {
+            const sessionsRes = await fetch(`${API_URL}/chat/history/sessions?limit=1`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (sessionsRes.ok) {
@@ -177,7 +184,7 @@ const Chat = () => {
               if (latest?.sessionId) {
                 setSessionId(latest.sessionId);
                 localStorage.setItem('chatSessionId', latest.sessionId);
-                const historyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/${latest.sessionId}?limit=100&includeContext=true`, {
+                const historyRes = await fetch(`${API_URL}/chat/history/${latest.sessionId}?limit=100&includeContext=true`, {
                   headers: { Authorization: `Bearer ${token}` }
                 });
                 if (historyRes.ok) {
@@ -235,7 +242,7 @@ const Chat = () => {
   const fetchSuggestions = useCallback(async (chunks = []) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/suggest`, {
+      const response = await fetch(`${API_URL}/chat/suggest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -522,7 +529,7 @@ const Chat = () => {
       console.log('📤 Sending chat message:', { message: message.substring(0, 50), sessionId: effectiveSessionId, hasToken: !!token });
 
       // Send the message and handle streaming response
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat`, {
+      const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -567,7 +574,7 @@ const Chat = () => {
 
     setIsLoadingSessions(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/sessions?limit=50`, {
+      const response = await fetch(`${API_URL}/chat/sessions?limit=50`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
@@ -592,7 +599,7 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/${selectedSessionId}?limit=100&includeContext=true`, {
+      const response = await fetch(`${API_URL}/chat/history/${selectedSessionId}?limit=100&includeContext=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
@@ -633,7 +640,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/sessions/${sessionIdToDelete}`, {
+      const response = await fetch(`${API_URL}/chat/sessions/${sessionIdToDelete}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
