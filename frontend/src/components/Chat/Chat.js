@@ -32,7 +32,14 @@ import MessageList from './MessageList';
 import InputArea from './InputArea';
 import CitationPanel from './CitationPanel';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+// Normalize API base: allow REACT_APP_API_URL to be either http://host or http://host/api
+// and tolerate accidental leading "hhttps"/"hhttp"
+const RAW_API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const CLEAN_API_URL = RAW_API_URL
+  .replace(/^hhttps:/i, 'https:')
+  .replace(/^hhttp:/i, 'http:');
+const API_BASE = CLEAN_API_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+const API_URL = `${API_BASE}/api`;
 
 const ChatContainer = styled(Paper)(({ theme }) => ({
   display: 'flex',

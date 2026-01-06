@@ -1,9 +1,11 @@
 import axios from 'axios';
 import { getToken } from '../utils/auth';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-
-console.log('API Base URL:', API_BASE_URL);
+// Normalize API base URL; tolerate accidental leading "hhttps" or trailing /api
+const RAW_API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const cleanedUrl = RAW_API_URL.replace(/^hhttps:/i, 'https:').replace(/^hhttp:/i, 'http:');
+const API_BASE = cleanedUrl.replace(/\/+$/, '').replace(/\/api$/, '');
+const API_BASE_URL = `${API_BASE}/api`;
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -17,10 +19,6 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
-    console.log('📤 Request data:', config.data);
-    console.log('🔗 Full URL:', config.baseURL + config.url);
-    
     const token = getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -28,7 +26,6 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -36,16 +33,9 @@ apiClient.interceptors.request.use(
 // Response interceptor to handle 401 Unauthorized
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', response.config.method?.toUpperCase(), response.config.url, response.status);
-    console.log('📥 Response data:', response.data);
     return response;
   },
   async (error) => {
-    console.error('❌ Response Error:', error.config?.method?.toUpperCase(), error.config?.url);
-    console.error('🔥 Error status:', error.response?.status);
-    console.error('📄 Error data:', error.response?.data);
-    console.error('💬 Full error:', error.message);
-    
     const originalRequest = error.config;
     
     // If error is 401 and we haven't tried to refresh yet
