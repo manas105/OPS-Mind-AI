@@ -148,7 +148,7 @@ const Chat = () => {
 
           if (candidateSessionId) {
             setSessionId(candidateSessionId);
-            const historyRes = await fetch(`${API_BASE_URL}/api/chat/history/${candidateSessionId}?limit=100&includeContext=true`, {
+            const historyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/${candidateSessionId}?limit=100&includeContext=true`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (historyRes.ok) {
@@ -167,7 +167,7 @@ const Chat = () => {
             }
           } else {
             // Otherwise, load latest session from server
-            const sessionsRes = await fetch(`${API_BASE_URL}/api/chat/history/sessions?limit=1`, {
+            const sessionsRes = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/sessions?limit=1`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (sessionsRes.ok) {
@@ -177,7 +177,7 @@ const Chat = () => {
               if (latest?.sessionId) {
                 setSessionId(latest.sessionId);
                 localStorage.setItem('chatSessionId', latest.sessionId);
-                const historyRes = await fetch(`${API_BASE_URL}/api/chat/history/${latest.sessionId}?limit=100&includeContext=true`, {
+                const historyRes = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/${latest.sessionId}?limit=100&includeContext=true`, {
                   headers: { Authorization: `Bearer ${token}` }
                 });
                 if (historyRes.ok) {
@@ -235,7 +235,7 @@ const Chat = () => {
   const fetchSuggestions = useCallback(async (chunks = []) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/chat/suggest`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/suggest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -522,7 +522,7 @@ const Chat = () => {
       console.log('📤 Sending chat message:', { message: message.substring(0, 50), sessionId: effectiveSessionId, hasToken: !!token });
 
       // Send the message and handle streaming response
-      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -567,7 +567,7 @@ const Chat = () => {
 
     setIsLoadingSessions(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/sessions?limit=50`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/sessions?limit=50`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
@@ -592,7 +592,7 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/history/${selectedSessionId}?limit=100&includeContext=true`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/history/${selectedSessionId}?limit=100&includeContext=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
@@ -633,7 +633,7 @@ const Chat = () => {
     if (!token) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/chat/sessions/${sessionIdToDelete}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/chat/sessions/${sessionIdToDelete}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
