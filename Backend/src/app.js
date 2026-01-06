@@ -17,7 +17,8 @@ const defaultCorsOrigins = [
   'http://localhost:3002',
   'http://127.0.0.1:3002',
   'https://opsmind-ai.vercel.app',
-  'https://ops-mind-ai.vercel.app'
+  'https://ops-mind-ai.vercel.app',
+  'https://ops-mind-ai-eozhdddir-manas-projects-8179c84e.vercel.app'
 ];
 
 const corsOrigins = (process.env.CORS_ORIGINS || '')
