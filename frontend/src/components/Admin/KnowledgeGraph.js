@@ -16,8 +16,7 @@ import {
   IconButton,
   Tooltip,
   Alert,
-  Avatar,
-  Paper
+  Avatar
 } from '@mui/material';
 import {
   BarChart,
@@ -61,7 +60,9 @@ const KnowledgeGraph = () => {
   const [timeRange, setTimeRange] = useState('7d');
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
   const fileInputRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -136,6 +137,8 @@ const KnowledgeGraph = () => {
         topicAnalytics: topicAnalytics.data?.data || [],
         hourlyUsage: hourlyUsage.data?.data || []
       });
+      
+      setLastUpdated(new Date());
 
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -148,8 +151,29 @@ const KnowledgeGraph = () => {
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
       loadAnalyticsData();
+      
+      // Set up real-time polling every 10 seconds
+      pollingIntervalRef.current = setInterval(() => {
+        loadAnalyticsData();
+      }, 10000);
+      
+      // Cleanup polling on unmount or when auth changes
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
+      };
     }
   }, [isAuthenticated, user, loadAnalyticsData]);
+
+  // Cleanup polling when component unmounts
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleRefresh = () => {
     loadAnalyticsData();
@@ -490,14 +514,33 @@ const KnowledgeGraph = () => {
   }
 
   return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        p: 3,
-        background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
-        minHeight: '100vh',
-      }}
-    >
+    <>
+      <style>
+        {`
+          @keyframes pulse {
+            0% {
+              opacity: 1;
+              transform: scale(1);
+            }
+            50% {
+              opacity: 0.5;
+              transform: scale(1.1);
+            }
+            100% {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+        `}
+      </style>
+      <Box
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
+          minHeight: '100vh',
+        }}
+      >
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography
@@ -514,7 +557,23 @@ const KnowledgeGraph = () => {
           Admin Dashboard
         </Typography>
         
-        <Box display="flex" gap={2}>
+        <Box display="flex" alignItems="center" gap={2}>
+          {/* Real-time indicator */}
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: '#10b981',
+                animation: 'pulse 2s infinite',
+              }}
+            />
+            <Typography variant="caption" color="textSecondary">
+              Live • Updated {lastUpdated.toLocaleTimeString()}
+            </Typography>
+          </Box>
+          
           {/* File Upload Button */}
           <Tooltip title="Upload PDF Document">
             <Button
@@ -619,6 +678,7 @@ const KnowledgeGraph = () => {
         <UserManagement />
       </Box>
     </Box>
+    </>
   );
 };
 
