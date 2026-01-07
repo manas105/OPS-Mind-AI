@@ -41,7 +41,8 @@ import {
   Assessment as AssessmentIcon,
   Speed as SpeedIcon,
   SmartToy as BotIcon,
-  UploadFile as UploadFileIcon
+  UploadFile as UploadFileIcon,
+  Sync as SyncIcon
 } from '@mui/icons-material';
 import api from '../../services/api';
 import UserManagement from './UserManagement';
@@ -58,9 +59,10 @@ const KnowledgeGraph = () => {
   const [error, setError] = useState(null);
   const [currentTab, setCurrentTab] = useState(0);
   const [timeRange, setTimeRange] = useState('7d');
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
   const fileInputRef = useRef(null);
   const pollingIntervalRef = useRef(null);
 
@@ -137,7 +139,7 @@ const KnowledgeGraph = () => {
         topicAnalytics: topicAnalytics.data?.data || [],
         hourlyUsage: hourlyUsage.data?.data || []
       });
-      
+
       setLastUpdated(new Date());
 
     } catch (error) {
@@ -151,22 +153,26 @@ const KnowledgeGraph = () => {
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
       loadAnalyticsData();
-      
-      // Set up real-time polling every 10 seconds
+    }
+  }, [isAuthenticated, user, loadAnalyticsData]);
+
+  // Set up polling for real-time updates
+  useEffect(() => {
+    if (autoRefresh && isAuthenticated && user?.role === 'admin') {
+      // Set up polling interval (every 30 seconds)
       pollingIntervalRef.current = setInterval(() => {
         loadAnalyticsData();
-      }, 10000);
-      
-      // Cleanup polling on unmount or when auth changes
+      }, 30000);
+
       return () => {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
         }
       };
     }
-  }, [isAuthenticated, user, loadAnalyticsData]);
+  }, [autoRefresh, isAuthenticated, user, loadAnalyticsData]);
 
-  // Cleanup polling when component unmounts
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (pollingIntervalRef.current) {
@@ -221,6 +227,11 @@ const KnowledgeGraph = () => {
               background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3)'
+              }
             }}
           >
             <CardContent>
@@ -247,6 +258,11 @@ const KnowledgeGraph = () => {
               background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3)'
+              }
             }}
           >
             <CardContent>
@@ -273,6 +289,11 @@ const KnowledgeGraph = () => {
               background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3)'
+              }
             }}
           >
             <CardContent>
@@ -299,6 +320,11 @@ const KnowledgeGraph = () => {
               background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3)'
+              }
             }}
           >
             <CardContent>
@@ -514,33 +540,14 @@ const KnowledgeGraph = () => {
   }
 
   return (
-    <>
-      <style>
-        {`
-          @keyframes pulse {
-            0% {
-              opacity: 1;
-              transform: scale(1);
-            }
-            50% {
-              opacity: 0.5;
-              transform: scale(1.1);
-            }
-            100% {
-              opacity: 1;
-              transform: scale(1);
-            }
-          }
-        `}
-      </style>
-      <Box
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
-          minHeight: '100vh',
-        }}
-      >
+    <Box
+      sx={{
+        flexGrow: 1,
+        p: 3,
+        background: 'linear-gradient(135deg, #000000 0%, #1a1a2e 100%)',
+        minHeight: '100vh',
+      }}
+    >
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography
@@ -557,23 +564,7 @@ const KnowledgeGraph = () => {
           Admin Dashboard
         </Typography>
         
-        <Box display="flex" alignItems="center" gap={2}>
-          {/* Real-time indicator */}
-          <Box display="flex" alignItems="center" gap={1}>
-            <Box
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: '#10b981',
-                animation: 'pulse 2s infinite',
-              }}
-            />
-            <Typography variant="caption" color="textSecondary">
-              Live • Updated {lastUpdated.toLocaleTimeString()}
-            </Typography>
-          </Box>
-          
+        <Box display="flex" gap={2}>
           {/* File Upload Button */}
           <Tooltip title="Upload PDF Document">
             <Button
@@ -630,11 +621,34 @@ const KnowledgeGraph = () => {
             </IconButton>
           </Tooltip>
 
+          <Tooltip title={autoRefresh ? "Disable Auto-refresh" : "Enable Auto-refresh"}>
+            <IconButton 
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              color={autoRefresh ? "primary" : "default"}
+            >
+              <SyncIcon sx={{ 
+                animation: autoRefresh ? 'spin 2s linear infinite' : 'none',
+                '@keyframes spin': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' }
+                }
+              }} />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title="Export Analytics">
             <IconButton onClick={handleExportData}>
               <DownloadIcon />
             </IconButton>
           </Tooltip>
+        </Box>
+
+        {/* Last Updated Display */}
+        <Box sx={{ mt: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+            {autoRefresh && " (Auto-refresh enabled)"}
+          </Typography>
         </Box>
       </Box>
 
@@ -678,7 +692,6 @@ const KnowledgeGraph = () => {
         <UserManagement />
       </Box>
     </Box>
-    </>
   );
 };
 

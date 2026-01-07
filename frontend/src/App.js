@@ -7,6 +7,9 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Unauthorized from './components/auth/Unauthorized';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import About from './components/Pages/About';
+import Contact from './components/Pages/Contact';
+import PrivacyPolicy from './components/Pages/PrivacyPolicy';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const theme = createTheme({
@@ -156,6 +159,12 @@ function AppContent({ currentView, onNavigate }) {
         <Register onNavigate={onNavigate} />
       ) : currentView === 'unauthorized' ? (
         <Unauthorized onNavigate={onNavigate} />
+      ) : currentView === 'about' ? (
+        <About onNavigate={onNavigate} />
+      ) : currentView === 'contact' ? (
+        <Contact onNavigate={onNavigate} />
+      ) : currentView === 'privacy' ? (
+        <PrivacyPolicy onNavigate={onNavigate} />
       ) : (
         <>
           {/* Navigation Header */}

@@ -17,6 +17,7 @@ import {
   Speed,
   AdminPanelSettings,
   GitHub,
+  LinkedIn,
   CloudUpload,
   Security,
   Analytics,
@@ -406,7 +407,7 @@ const Landing = ({ onNavigate }) => {
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <Link
-                  href="https://github.com/manas105/opsmind-ai"
+                  href="https://github.com/manas105/OPS-Mind-AI.git"
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{
@@ -423,6 +424,24 @@ const Landing = ({ onNavigate }) => {
                   <GitHub />
                   <span>GitHub</span>
                 </Link>
+                <Link
+                  href="https://www.linkedin.com/in/manash-seal-3b1a25207/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    textDecoration: 'none',
+                    '&:hover': {
+                      color: 'white',
+                    },
+                  }}
+                >
+                  <LinkedIn />
+                  <span>LinkedIn</span>
+                </Link>
               </Box>
             </Grid>
 
@@ -433,6 +452,7 @@ const Landing = ({ onNavigate }) => {
               <Stack spacing={1}>
                 <Button
                   color="inherit"
+                  onClick={() => onNavigate('about')}
                   sx={{
                     textTransform: 'none',
                     color: 'rgba(255, 255, 255, 0.7)',
@@ -440,10 +460,11 @@ const Landing = ({ onNavigate }) => {
                     '&:hover': { color: 'white' },
                   }}
                 >
-                  About Us
+                  About Me
                 </Button>
                 <Button
                   color="inherit"
+                  onClick={() => onNavigate('contact')}
                   sx={{
                     textTransform: 'none',
                     color: 'rgba(255, 255, 255, 0.7)',
@@ -455,6 +476,7 @@ const Landing = ({ onNavigate }) => {
                 </Button>
                 <Button
                   color="inherit"
+                  onClick={() => onNavigate('privacy')}
                   sx={{
                     textTransform: 'none',
                     color: 'rgba(255, 255, 255, 0.7)',
@@ -470,7 +492,7 @@ const Landing = ({ onNavigate }) => {
 
           <Box sx={{ mt: 6, pt: 3, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center' }}>
-              Built with ❤️ by OpsMind Team
+              Built with ❤️ by Manas
             </Typography>
           </Box>
         </Container>
