@@ -5,10 +5,13 @@ import {
   Paper, 
   Avatar, 
   Tooltip, 
-  Chip
+  Chip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import SourcePills from './SourcePills';
 
 const StyledMessage = styled(Paper, {
   shouldForwardProp: (prop) => prop !== 'isUser' && prop !== 'isError' && prop !== 'isStreaming',
@@ -72,6 +75,8 @@ const Message = ({ message }) => {
   const isError = message.isError;
   const isStreaming = message.isStreaming;
   const formattedTime = new Date(message.timestamp).toLocaleTimeString();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   console.log('📨 Message component received:', message);
   console.log('👤 Is user message:', isUser);
@@ -277,40 +282,49 @@ const Message = ({ message }) => {
           >
             {renderContent()}
             
-            {message.chunks && message.chunks.length > 0 && (
-              <Box mt={1}>
-                <Typography 
-                  variant="caption" 
-                  display="block" 
-                  color={isUser || isError ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary'}
-                  sx={{ fontWeight: 500 }}
-                >
-                  Sources:
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
-                  {message.chunks.map((chunk, index) => (
-                    <Chip
-                      key={index}
-                      label={chunk.source || 'Document'}
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        color: isUser || isError ? 'rgba(255, 255, 255, 0.7)' : 'inherit',
-                        borderColor: isUser || isError ? 'rgba(255, 255, 255, 0.3)' : 'inherit',
-                        fontSize: '0.7rem',
-                        height: '20px',
-                        maxWidth: '100%',
-                        '& .MuiChip-label': {
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        },
-                      }}
-                      title={chunk.source || 'Document source'}
-                    />
-                  ))}
+            {/* Show SourcePills for assistant messages on mobile, regular chips on desktop */}
+            {!isUser && !isError && message.citations && message.citations.length > 0 && (
+              isMobile ? (
+                <SourcePills 
+                  citations={message.citations}
+                  onCitationClick={(citation) => {
+                    console.log('Citation clicked:', citation);
+                    // You can add additional handling here if needed
+                  }}
+                />
+              ) : (
+                <Box mt={1}>
+                  <Typography 
+                    variant="caption" 
+                    display="block" 
+                    color="text.secondary"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    Sources:
+                  </Typography>
+                  <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
+                    {message.citations.map((citation, index) => (
+                      <Chip
+                        key={index}
+                        label={citation.source || 'Document'}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          fontSize: '0.7rem',
+                          height: '20px',
+                          maxWidth: '100%',
+                          '& .MuiChip-label': {
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          },
+                        }}
+                        title={citation.source || 'Document source'}
+                      />
+                    ))}
+                  </Box>
                 </Box>
-              </Box>
+              )
             )}
           </StyledMessage>
         </Tooltip>

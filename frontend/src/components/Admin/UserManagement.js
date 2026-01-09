@@ -23,7 +23,7 @@ import {
   TextField,
   Snackbar,
 } from '@mui/material';
-import { PersonAdd, PersonOff, AdminPanelSettings } from '@mui/icons-material';
+import { PersonAdd, PersonOff, AdminPanelSettings, Delete } from '@mui/icons-material';
 import api from '../../services/api';
 
 const UserManagement = () => {
@@ -32,6 +32,7 @@ const UserManagement = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [assignRoleDialog, setAssignRoleDialog] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState('');
 
@@ -87,11 +88,46 @@ const UserManagement = () => {
     }
   };
 
+  // Delete user
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    const userId = selectedUser._id || selectedUser.id;
+    console.log('Deleting user with ID:', userId);
+    
+    if (!userId) {
+      setError('User ID not found');
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/users/${userId}`);
+      setSuccess(`User ${selectedUser.email} deleted successfully`);
+      setDeleteDialog(false);
+      setSelectedUser(null);
+      fetchUsers(); // Refresh users list
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete user');
+    }
+  };
+
   // Open assign role dialog
   const openAssignRoleDialog = (user) => {
     setSelectedUser(user);
     setNewRole(user.role);
     setAssignRoleDialog(true);
+  };
+
+  // Open delete dialog
+  const openDeleteDialog = (user) => {
+    console.log('User object for deletion:', user);
+    console.log('User ID fields:', {
+      id: user.id,
+      _id: user._id,
+      userId: user.userId
+    });
+    setSelectedUser(user);
+    setDeleteDialog(true);
   };
 
   const getRoleColor = (role) => {
@@ -200,6 +236,15 @@ const UserManagement = () => {
                       >
                         {user.isActive ? 'Deactivate' : 'Activate'}
                       </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => openDeleteDialog(user)}
+                        startIcon={<Delete />}
+                      >
+                        Delete
+                      </Button>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -247,6 +292,37 @@ const UserManagement = () => {
             disabled={!newRole}
           >
             Assign Role
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog}
+        onClose={() => setDeleteDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Delete User</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Typography>
+              Are you sure you want to delete user <strong>{selectedUser?.email}</strong>?
+            </Typography>
+            <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+              This action cannot be undone. The user will be permanently removed from the system.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog(false)}>Cancel</Button>
+          <Button
+            onClick={handleDeleteUser}
+            variant="contained"
+            color="error"
+            disabled={!selectedUser}
+          >
+            Delete User
           </Button>
         </DialogActions>
       </Dialog>

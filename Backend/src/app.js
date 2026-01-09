@@ -18,7 +18,8 @@ const defaultCorsOrigins = [
   'http://127.0.0.1:3002',
   'https://opsmind-ai.vercel.app',
   'https://ops-mind-ai.vercel.app',
-  'https://ops-mind-ai-eozhdddir-manas-projects-8179c84e.vercel.app'
+  'https://ops-mind-ai-eozhdddir-manas-projects-8179c84e.vercel.app',
+  'https://ops-mind-ai-back.onrender.com'
 ];
 
 const corsOrigins = (process.env.CORS_ORIGINS || '')
@@ -49,6 +50,18 @@ app.use(express.json());
 app.use('/', routes);
 
 app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
+
+// Global error handler to catch all unhandled errors
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  
+  // Return JSON response for all errors
+  res.status(error.status || 500).json({
+    status: 'error',
+    message: error.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  });
+});
 
 // Global error handlers to prevent crashes
 process.on('unhandledRejection', (reason, promise) => {

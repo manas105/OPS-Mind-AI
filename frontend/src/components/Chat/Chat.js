@@ -17,7 +17,9 @@ import {
   ListItem,
   ListItemText,
   ListItemButton,
-  ListItemIcon
+  ListItemIcon,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import HistoryIcon from '@mui/icons-material/History';
@@ -109,6 +111,9 @@ const Chat = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatSessions, setChatSessions] = useState([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const messagesEndRef = useRef(null);
   const eventSourceRef = useRef(null);
@@ -917,8 +922,8 @@ const Chat = () => {
           <div ref={messagesEndRef} />
         </Box>
 
-        {/* Citations Panel */}
-        {showCitations && currentCitations.length > 0 && (
+        {/* Citations Panel - Only show on desktop */}
+        {!isMobile && showCitations && currentCitations.length > 0 && (
           <>
             <Divider orientation="vertical" flexItem />
             <CitationPanel 

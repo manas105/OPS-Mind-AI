@@ -153,4 +153,50 @@ router.post(
   }
 );
 
+/**
+ * @route   DELETE /api/admin/users/:id
+ * @desc    Delete user (admin only)
+ * @access  Admin only
+ */
+router.delete('/users/:id', auth.required, auth.hasRole('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find user
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Prevent admin from deleting themselves
+    if (req.user.email === user.email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete your own account'
+      });
+    }
+
+    // Delete user's document chunks first
+    const DocumentChunk = require('../models/DocumentChunk');
+    await DocumentChunk.deleteMany({ fileId: { $regex: user.email } });
+
+    // Delete user
+    await User.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: `User ${user.email} deleted successfully`
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete user'
+    });
+  }
+});
+
 module.exports = router;

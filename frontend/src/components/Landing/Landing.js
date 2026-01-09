@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   Container,
   Box,
@@ -15,7 +15,6 @@ import {
 import {
   Psychology,
   Speed,
-  AdminPanelSettings,
   GitHub,
   LinkedIn,
   CloudUpload,
@@ -27,22 +26,6 @@ import { styled, keyframes } from '@mui/material/styles';
 import SpacetimeGrid from './SpacetimeGrid';
 
 // Animations
-const floatAnimation = keyframes`
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-`;
-
-const twinkleAnimation = keyframes`
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
-`;
-
-const gradientAnimation = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-`;
-
 const shimmerAnimation = keyframes`
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -57,7 +40,7 @@ const Star = styled(Box)(({ delay, size, left, top, twinkle }) => ({
   background: 'white',
   left: left,
   top: top,
-  animation: `${twinkle ? 'twinkle' : 'float'} ${twinkle ? '3s' : '6s'} ease-in-out infinite`,
+  animation: 'twinkle 3s ease-in-out infinite',
   animationDelay: delay,
   boxShadow: '0 0 4px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.4)',
 }));
@@ -210,8 +193,7 @@ const Landing = ({ onNavigate }) => {
           zIndex: 2,
         }}
       >
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', pl: 3 }}>
             <Zoom in={isVisible} timeout={800}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Box
@@ -243,8 +225,7 @@ const Landing = ({ onNavigate }) => {
                 </Typography>
               </Box>
             </Zoom>
-          </Box>
-        </Container>
+        </Box>
       </Box>
 
       {/* Hero Section */}
@@ -445,8 +426,8 @@ const Landing = ({ onNavigate }) => {
               </Box>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'white' }}>
+            <Grid size={{ xs: 12, md: 4 }} sx={{ ml: 'auto' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: 'white', textAlign: { xs: 'left', md: 'right' } }}>
                 Quick Links
               </Typography>
               <Stack spacing={1}>
@@ -456,7 +437,7 @@ const Landing = ({ onNavigate }) => {
                   sx={{
                     textTransform: 'none',
                     color: 'rgba(255, 255, 255, 0.7)',
-                    justifyContent: 'flex-start',
+                    justifyContent: { xs: 'flex-start', md: 'flex-end' },
                     '&:hover': { color: 'white' },
                   }}
                 >
@@ -468,7 +449,7 @@ const Landing = ({ onNavigate }) => {
                   sx={{
                     textTransform: 'none',
                     color: 'rgba(255, 255, 255, 0.7)',
-                    justifyContent: 'flex-start',
+                    justifyContent: { xs: 'flex-start', md: 'flex-end' },
                     '&:hover': { color: 'white' },
                   }}
                 >
@@ -480,7 +461,7 @@ const Landing = ({ onNavigate }) => {
                   sx={{
                     textTransform: 'none',
                     color: 'rgba(255, 255, 255, 0.7)',
-                    justifyContent: 'flex-start',
+                    justifyContent: { xs: 'flex-start', md: 'flex-end' },
                     '&:hover': { color: 'white' },
                   }}
                 >

@@ -89,7 +89,7 @@ const KnowledgeGraph = () => {
     formData.append('pdf', file);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload`, {
+      const response = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -97,17 +97,28 @@ const KnowledgeGraph = () => {
         body: formData
       });
 
-      const data = await response.json();
+      // Handle different response types
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // Get text response (likely HTML error page)
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error(`Server returned ${response.status}: ${text.substring(0, 200)}...`);
+      }
 
       if (response.ok) {
         setUploadSuccess(`File uploaded successfully! Processed ${data.chunks} chunks.`);
         loadAnalyticsData();
       } else {
-        setError(`Upload failed: ${data.message || 'Unknown error'}`);
+        setError(`Upload failed: ${data.message || data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Upload error:', error);
-      setError('Upload failed. Please try again.');
+      setError(`Upload failed: ${error.message}`);
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -116,6 +127,7 @@ const KnowledgeGraph = () => {
     }
   };
 
+  
   const loadAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
@@ -221,7 +233,7 @@ const KnowledgeGraph = () => {
 
     return (
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card
             sx={{
               background: 'rgba(255, 255, 255, 0.1)',
@@ -252,7 +264,7 @@ const KnowledgeGraph = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card
             sx={{
               background: 'rgba(255, 255, 255, 0.1)',
@@ -283,7 +295,7 @@ const KnowledgeGraph = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card
             sx={{
               background: 'rgba(255, 255, 255, 0.1)',
@@ -314,7 +326,7 @@ const KnowledgeGraph = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card
             sx={{
               background: 'rgba(255, 255, 255, 0.1)',
@@ -580,15 +592,15 @@ const KnowledgeGraph = () => {
               }}
             >
               {uploading ? 'Uploading...' : 'Upload PDF'}
+              <input
+                type="file"
+                accept=".pdf"
+                hidden
+                onChange={handleFileUpload}
+                ref={fileInputRef}
+              />
             </Button>
           </Tooltip>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf"
-            onChange={handleFileUpload}
-            style={{ display: 'none' }}
-          />
 
           {/* Time Range Selector */}
           <Box>
@@ -668,7 +680,7 @@ const KnowledgeGraph = () => {
 
       {/* Charts Section */}
       <Grid container spacing={3} sx={{ mt: 3 }}>
-        <Grid item xs={12} md={8}>
+        <Grid xs={12} md={8}>
           <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
             <Tab label="Usage Trends" />
             <Tab label="Document Analytics" />
@@ -682,7 +694,7 @@ const KnowledgeGraph = () => {
           </Box>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid xs={12} md={4}>
           {renderRecentActivity()}
         </Grid>
       </Grid>

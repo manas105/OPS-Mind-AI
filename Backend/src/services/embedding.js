@@ -22,7 +22,10 @@ async function embedText(text) {
     normalize: true,
   });
 
-  return Array.from(output.data);
+  const embedding = Array.from(output.data);
+  console.log(`Generated embedding with ${embedding.length} dimensions for text length ${text.length}`);
+  
+  return embedding;
 }
 
 /**

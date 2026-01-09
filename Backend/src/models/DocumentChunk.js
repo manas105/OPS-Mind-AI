@@ -60,7 +60,7 @@ const documentChunkSchema = new mongoose.Schema({
 documentChunkSchema.index({ fileId: 1, chunkId: 1 }, { unique: true });
 
 // Create a vector index for vector search
-documentChunkSchema.index({ embedding: "vector" }, { name: "vector_index", dimensions: 768 });
+documentChunkSchema.index({ embedding: "vector" }, { name: "vector_index", dimensions: 384 });
 
 const DocumentChunk = mongoose.model('DocumentChunk', documentChunkSchema);
 
