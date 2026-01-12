@@ -69,11 +69,11 @@ async function parsePdfWithPages(filePath) {
 /**
  * Splits text into chunks of approximately chunkSize characters with overlap.
  * @param {string} text - The full text to chunk.
- * @param {number} chunkSize - Approximate size of each chunk (default 800).
- * @param {number} overlap - Number of characters to overlap between chunks (default 100).
+ * @param {number} chunkSize - Approximate size of each chunk (default 1600).
+ * @param {number} overlap - Number of characters to overlap between chunks (default 200).
  * @returns {Array<{chunkId: string, content: string}>} Array of chunk objects.
  */
-function chunkText(text, chunkSize = 800, overlap = 100) {
+function chunkText(text, chunkSize = 1600, overlap = 200) {
   return chunkTextWithPages([{ page: 1, text }], chunkSize, overlap).map(chunk => ({
     chunkId: chunk.chunkId,
     content: chunk.content
@@ -83,11 +83,11 @@ function chunkText(text, chunkSize = 800, overlap = 100) {
 /**
  * Splits text into chunks of approximately chunkSize characters with overlap and page tracking.
  * @param {Array<{page: number, text: string}>} pages - Array of page objects.
- * @param {number} chunkSize - Approximate size of each chunk (default 800).
- * @param {number} overlap - Number of characters to overlap between chunks (default 100).
+ * @param {number} chunkSize - Approximate size of each chunk (default 1600).
+ * @param {number} overlap - Number of characters to overlap between chunks (default 200).
  * @returns {Array<{chunkId: string, content: string, pages: Array<{page: number, startChar: number, endChar: number}>}>} Array of chunk objects with page metadata.
  */
-function chunkTextWithPages(pages, chunkSize = 800, overlap = 100) {
+function chunkTextWithPages(pages, chunkSize = 1600, overlap = 200) {
   const chunks = [];
   let fullText = '';
   let pageMap = [];

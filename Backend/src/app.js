@@ -3,9 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const routes = require('./routes');
 const connectDB = require('./config/database');
+const { initializeEmbedder } = require('./services/embedding');
 
 // Connect to database
 connectDB();
+
+// Initialize embedding model at startup
+initializeEmbedder().catch(error => {
+  console.error('Failed to initialize embedding model:', error);
+  process.exit(1);
+});
 
 const app = express();
 const PORT = process.env.PORT || 3001;

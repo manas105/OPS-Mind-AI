@@ -3,18 +3,28 @@ const { pipeline } = require("@xenova/transformers");
 let embedder;
 
 /**
+ * Initialize the embedding model - call this at server startup
+ * @returns {Promise<void>}
+ */
+async function initializeEmbedder() {
+  if (!embedder) {
+    console.log('Initializing MiniLM embedding model at startup...');
+    embedder = await pipeline(
+      "feature-extraction",
+      "Xenova/all-MiniLM-L6-v2"
+    );
+    console.log('MiniLM model loaded successfully at startup');
+  }
+}
+
+/**
  * Generate embeddings for text using MiniLM model
  * @param {string} text - The text to embed
  * @returns {Promise<Array<number>>} - The embedding vector
  */
 async function embedText(text) {
   if (!embedder) {
-    console.log('Initializing MiniLM embedding model...');
-    embedder = await pipeline(
-      "feature-extraction",
-      "Xenova/all-MiniLM-L6-v2"
-    );
-    console.log('MiniLM model loaded successfully');
+    throw new Error('Embedding model not initialized. Call initializeEmbedder() first.');
   }
 
   const output = await embedder(text, {
@@ -42,4 +52,4 @@ async function embedBatch(texts) {
   return embeddings;
 }
 
-module.exports = { embedText, embedBatch };
+module.exports = { initializeEmbedder, embedText, embedBatch };

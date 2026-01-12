@@ -63,6 +63,8 @@ const KnowledgeGraph = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [uploadJobId, setUploadJobId] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const fileInputRef = useRef(null);
   const pollingIntervalRef = useRef(null);
 
@@ -83,12 +85,14 @@ const KnowledgeGraph = () => {
 
     setUploading(true);
     setUploadSuccess(null);
+    setUploadProgress(null);
     setError(null);
 
     const formData = new FormData();
     formData.append('pdf', file);
 
     try {
+      // Upload file and get job ID
       const response = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         headers: {
@@ -97,34 +101,72 @@ const KnowledgeGraph = () => {
         body: formData
       });
 
-      // Handle different response types
-      const contentType = response.headers.get('content-type');
-      let data;
-      
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        // Get text response (likely HTML error page)
-        const text = await response.text();
-        console.error('Non-JSON response:', text);
-        throw new Error(`Server returned ${response.status}: ${text.substring(0, 200)}...`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Upload failed');
       }
 
-      if (response.ok) {
-        setUploadSuccess(`File uploaded successfully! Processed ${data.chunks} chunks.`);
-        loadAnalyticsData();
-      } else {
-        setError(`Upload failed: ${data.message || data.error || 'Unknown error'}`);
-      }
+      // Start polling for job status
+      const jobId = data.jobId;
+      setUploadJobId(jobId);
+      setUploadProgress({ status: 'pending', message: 'Processing started...' });
+      
+      pollJobStatus(jobId);
+
     } catch (error) {
       console.error('Upload error:', error);
       setError(`Upload failed: ${error.message}`);
-    } finally {
       setUploading(false);
+    } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
+  };
+
+  const pollJobStatus = async (jobId) => {
+    const token = localStorage.getItem('token');
+    
+    const checkStatus = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/upload-status/${jobId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to check status');
+        }
+
+        const job = data.job;
+        setUploadProgress(job);
+
+        if (job.status === 'completed') {
+          setUploading(false);
+          setUploadSuccess(`File processed successfully! ${job.result.chunks} chunks processed.`);
+          setUploadJobId(null);
+          loadAnalyticsData();
+        } else if (job.status === 'failed') {
+          setUploading(false);
+          setError(`Processing failed: ${job.error}`);
+          setUploadJobId(null);
+        } else {
+          // Continue polling
+          setTimeout(checkStatus, 2000); // Poll every 2 seconds
+        }
+      } catch (error) {
+        console.error('Status check error:', error);
+        setError(`Failed to check status: ${error.message}`);
+        setUploading(false);
+        setUploadJobId(null);
+      }
+    };
+
+    checkStatus();
   };
 
   
@@ -585,13 +627,17 @@ const KnowledgeGraph = () => {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               sx={{
-                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                background: uploading 
+                  ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                  : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                  background: uploading 
+                    ? 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+                    : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
                 },
               }}
             >
-              {uploading ? 'Uploading...' : 'Upload PDF'}
+              {uploading ? (uploadProgress ? 'Processing...' : 'Uploading...') : 'Upload PDF'}
               <input
                 type="file"
                 accept=".pdf"
@@ -663,6 +709,48 @@ const KnowledgeGraph = () => {
           </Typography>
         </Box>
       </Box>
+
+      {/* Upload Progress Display */}
+      {uploadProgress && (
+        <Alert 
+          severity="info" 
+          sx={{ mb: 3 }}
+        >
+          <Box>
+            <Typography variant="body2">
+              Processing: {uploadProgress.fileName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {uploadProgress.message}
+            </Typography>
+            {uploadProgress.progress > 0 && (
+              <Box sx={{ mt: 1 }}>
+                <Box 
+                  sx={{ 
+                    width: '100%', 
+                    height: 4, 
+                    bgcolor: 'rgba(255,255,255,0.1)', 
+                    borderRadius: 2,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      width: `${uploadProgress.progress}%`, 
+                      height: '100%', 
+                      bgcolor: 'primary.main',
+                      transition: 'width 0.3s ease'
+                    }}
+                  />
+                </Box>
+                <Typography variant="caption" color="text.secondary">
+                  {uploadProgress.progress}% complete
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Alert>
+      )}
 
       {/* Upload Success Message */}
       {uploadSuccess && (

@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 
 const uploadRoute = require('./uploadRoute');
+const uploadStatusRoute = require('./uploadStatus');
 const searchRoute = require('./searchRoute');
 const retrieveRoute = require('./retrieveRoute');
 const chatRoute = require('./chat');
@@ -90,6 +91,10 @@ router.get('/', (req, res) => {
 // Handle both /api/upload and /api/upload/
 apiRouter.use('/upload', uploadRoute);
 apiRouter.use('/upload/', uploadRoute);
+
+// Handle upload status routes
+apiRouter.use('/upload-status', uploadStatusRoute);
+apiRouter.use('/upload-status/', uploadStatusRoute);
 
 // Handle both /api/search and /api/search/
 apiRouter.use('/search', searchRoute);
