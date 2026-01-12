@@ -175,7 +175,7 @@ const UserManagement = () => {
       )}
 
       {/* Users Table */}
-      <Paper sx={{ p: 2 }}>
+      <Paper sx={{ p: 2, backgroundColor: 'background.paper', boxShadow: 3 }}>
         <TableContainer>
           <Table>
             <TableHead>
@@ -219,11 +219,19 @@ const UserManagement = () => {
                     {new Date(user.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', minWidth: '300px' }}>
                       <Button
                         size="small"
                         variant="outlined"
                         onClick={() => openAssignRoleDialog(user)}
+                        sx={{
+                          borderColor: 'primary.main',
+                          color: 'primary.main',
+                          '&:hover': {
+                            borderColor: 'primary.dark',
+                            backgroundColor: 'primary.50'
+                          }
+                        }}
                       >
                         Change Role
                       </Button>
@@ -233,6 +241,11 @@ const UserManagement = () => {
                         color={user.isActive ? 'error' : 'success'}
                         onClick={() => handleToggleStatus(user)}
                         startIcon={user.isActive ? <PersonOff /> : <PersonAdd />}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: user.isActive ? 'error.50' : 'success.50'
+                          }
+                        }}
                       >
                         {user.isActive ? 'Deactivate' : 'Activate'}
                       </Button>
@@ -242,6 +255,11 @@ const UserManagement = () => {
                         color="error"
                         onClick={() => openDeleteDialog(user)}
                         startIcon={<Delete />}
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: 'error.50'
+                          }
+                        }}
                       >
                         Delete
                       </Button>
@@ -260,6 +278,22 @@ const UserManagement = () => {
         onClose={() => setAssignRoleDialog(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'background.paper',
+            boxShadow: 24,
+            borderRadius: 2,
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            zIndex: 1300
+          }
+        }}
+        sx={{
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(4px)'
+          },
+          zIndex: 1300
+        }}
       >
         <DialogTitle>Assign Role</DialogTitle>
         <DialogContent>
@@ -302,6 +336,22 @@ const UserManagement = () => {
         onClose={() => setDeleteDialog(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'background.paper',
+            boxShadow: 24,
+            borderRadius: 2,
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            zIndex: 1300
+          }
+        }}
+        sx={{
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(4px)'
+          },
+          zIndex: 1300
+        }}
       >
         <DialogTitle>Delete User</DialogTitle>
         <DialogContent>
